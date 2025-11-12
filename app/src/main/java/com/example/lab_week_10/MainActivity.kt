@@ -5,9 +5,19 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.lifecycle.ViewModelProvider
+import androidx.room.Room
+import com.example.lab_week_10.database.Total
+import com.example.lab_week_10.database.TotalDatabase
 import com.example.lab_week_10.viewmodels.TotalViewModel
 
 class MainActivity : AppCompatActivity() {
+
+    private val db by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            TotalDatabase::class.java, "total-database"
+        ).allowMainThreadQueries().build()
+    }
 
     private val viewModel by lazy {
         ViewModelProvider(this)[TotalViewModel::class.java]
@@ -17,10 +27,27 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initializeValueFromDatabase()
         prepareViewModel()
 
         findViewById<Button>(R.id.button_increment).setOnClickListener {
             viewModel.incrementTotal()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.total.value?.let {
+            db.totalDao().update(Total(ID, it))
+        }
+    }
+
+    private fun initializeValueFromDatabase() {
+        val totalFromDb = db.totalDao().getTotal(ID)
+        if (totalFromDb.isEmpty()) {
+            db.totalDao().insert(Total(id = ID, total = 0))
+        } else {
+            viewModel.setTotal(totalFromDb.first().total)
         }
     }
 
@@ -33,5 +60,9 @@ class MainActivity : AppCompatActivity() {
         viewModel.total.observe(this, { newTotal ->
             updateText(newTotal)
         })
+    }
+
+    companion object {
+        const val ID: Long = 1
     }
 }
