@@ -31,8 +31,8 @@ class FirstFragment : Fragment() {
     private fun prepareViewModel(){
         val viewModel = ViewModelProvider(requireActivity()).get(TotalViewModel::class.java)
 
-        viewModel.total.observe(viewLifecycleOwner, { newTotal ->
-            updateText(newTotal)
+        viewModel.total.observe(viewLifecycleOwner, { newTotalObject ->
+            updateText(newTotalObject.value)
         })
     }
 }
